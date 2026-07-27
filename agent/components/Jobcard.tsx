@@ -1,21 +1,39 @@
-export default function Jobcard(){
-    return (
-        <div className="max-w-sm rounded overflow-hidden shadow-lg bg-white m-4">   
-        <div className="px-6 py-4">
-            <div className="font-bold text-xl mb-2">Job Title</div>
-            <p className="text-gray-700 text-base">
-                Company Name
-            </p>
-            <p className="text-gray-700 text-base">
-                Location
-            </p>
-        </div>
-        <div className="px-6 pt-4 pb-2">
-            <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">#tag1</span>
-            <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">#tag2</span>
-            <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">#tag3</span>
-        </div>
-    </div>
+export default function JobCard() {
+  return (
+    <div className="rounded-xl bg-white p-6 shadow">
 
-    )
+      <h2 className="text-xl font-bold">
+        Frontend Engineer
+      </h2>
+
+      <p className="mt-2 text-gray-500">
+        Google
+      </p>
+
+      <p className="mt-2">
+        📍 Munich, Germany
+      </p>
+
+      <p className="mt-2">
+        Platform : LinkedIn
+      </p>
+
+      <p className="mt-2 font-semibold text-green-600">
+        Match : 95%
+      </p>
+
+      <div className="mt-5 flex gap-3">
+
+        <button className="rounded bg-gray-200 px-4 py-2">
+          View Job
+        </button>
+
+        <button className="rounded bg-blue-600 px-4 py-2 text-white">
+          Apply
+        </button>
+
+      </div>
+
+    </div>
+  );
 }
