@@ -1,8 +1,9 @@
-import { getJobs } from "@/services/jobService";
+import { getJobs } from "@/services/searchService";
 import JobCard from "@/components/Jobcard";
 
 export default async function Dashboard() {
   const jobs = await getJobs();
+  console.log("Jobs fetched from database:", jobs);
 
   return (
     <div>
