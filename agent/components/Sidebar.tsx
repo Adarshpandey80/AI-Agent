@@ -18,7 +18,7 @@ export default function Sidebar() {
 
       <nav className="space-y-2">
 
-        <Link href="/dashboard" className="block rounded-xl px-4 py-3 font-medium text-white shadow-sm transition hover:bg-slate-800 hover:text-white bg-slate-900">
+        <Link href="/dashboard" className="block rounded-xl px-4 py-3 font-medium text-white shadow-sm transition hover:bg-slate-300  hover:text-white ">
           Dashboard
         </Link>
 
