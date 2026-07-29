@@ -1,16 +1,24 @@
 import { linkedinAgent } from "@/agents/linkedinAgent";
-import { scoreJobs } from "@/services/geminiService";
+import { greenhouseAgent } from "@/agents/greenhouseAgent";
+import { scoreJobs } from "./geminiService";
 
-export async function getJobs() {
-  // 1. Get jobs from the platform
-  const jobs = await linkedinAgent();
+export async function searchJobs() {
+  // Search every platform
+  const linkedinJobs = await linkedinAgent();
 
-  // 2. Send them to Gemini AI for filtering/scoring
-  const filtered = await scoreJobs(jobs);
+  const greenhouseJobs = await greenhouseAgent();
 
-  // 3. Return the filtered jobs
-  return filtered;
+  // Merge all jobs
+  const jobs = [
+    ...linkedinJobs,
+    ...greenhouseJobs,
+  ];
+
+  // Send jobs to AI
+  const filteredJobs = await scoreJobs(jobs);
+
+  // Later
+  // await saveJobs(filteredJobs);
+
+  return filteredJobs;
 }
-
-// Backwards compatibility: keep the old name available
-export const searchJobs = getJobs;
