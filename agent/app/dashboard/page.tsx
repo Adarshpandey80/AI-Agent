@@ -1,8 +1,8 @@
-import { getJobs } from "@/services/searchService";
+import { searchJobs } from "@/services/searchService";
 import JobCard from "@/components/Jobcard";
 
 export default async function Dashboard() {
-  const jobs = await getJobs();
+  const jobs = await searchJobs();
   console.log("Jobs fetched from database:", jobs);
 
   return (
@@ -12,4 +12,4 @@ export default async function Dashboard() {
       ))}
     </div>
   );
-}
+}  
