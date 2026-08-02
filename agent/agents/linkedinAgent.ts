@@ -1,12 +1,11 @@
-export async function linkedinAgent(){
-
+export async function linkedinAgent(profile: any) {
     return [
-
         {
-            company:"Google",
-            title:"Frontend Engineer"
-        }
-
+            company: "Google",
+            title: "Frontend Engineer",
+            location: "Remote",
+            platform: "LinkedIn",
+            url: "",
+        },
     ];
-
 }

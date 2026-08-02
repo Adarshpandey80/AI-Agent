@@ -4,38 +4,7 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
-export async function scoreJobs(jobs: any[]) {
-  const profile = {
-    roles: [
-      "Frontend Developer",
-      "Full Stack Developer",
-      "MERN Stack Developer",
-    ],
-
-    skills: [
-      "React.js",
-      "Next.js",
-      "TypeScript",
-      "JavaScript",
-      "Node.js",
-      "Express.js",
-      "MongoDB",
-      "SQL",
-      "Tailwind CSS",
-      "Redux Toolkit",
-      "LangChain",
-      "Generative AI",
-    ],
-
-    experience: "Entry Level",
-
-    countries: [
-      "Germany",
-      "Netherlands",
-      "Sweden",
-      "Austria",
-    ],
-  };
+export async function scoreJobs(profile: any, jobs: any[]) {
 
   const prompt = `
 You are an AI Job Matching Assistant.
