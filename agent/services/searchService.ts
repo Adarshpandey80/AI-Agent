@@ -11,7 +11,7 @@ export async function searchJobs() {
   const profile = await getProfile();
 
   if (!profile) {
-    throw new Error("Profile not found.");
+    return [];
   }
 
   const linkedinJobs = await linkedinAgent(profile);
