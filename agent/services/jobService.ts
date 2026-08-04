@@ -1,27 +1,30 @@
-import { connectDB } from "@/lib/mongodb";
-import Job from "@/models/job";
+import Job from "@/models/Job";
+import connectDB from "@/lib/db";
 
-export async function saveJobs(jobs: any[]) {
+export async function getDashboardStats() {
   await connectDB();
 
-  // Remove old search results
-  await Job.deleteMany({});
+  const jobsFound = await Job.countDocuments();
 
-  // Save new jobs
-  return await Job.insertMany(jobs);
-}
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-export async function getJobs() {
-  await connectDB();
-
-  return await Job.find().sort({
-    score: -1,
-    createdAt: -1,
+  const newToday = await Job.countDocuments({
+    createdAt: { $gte: today },
   });
-}
 
-export async function deleteJobs() {
-  await connectDB();
+  const applied = await Job.countDocuments({
+    applied: true,
+  });
 
-  return await Job.deleteMany({});
+  const interviews = await Job.countDocuments({
+    status: "Interview",
+  });
+
+  return {
+    jobsFound,
+    newToday,
+    applied,
+    interviews,
+  };
 }

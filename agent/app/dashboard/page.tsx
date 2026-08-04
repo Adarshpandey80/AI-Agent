@@ -25,7 +25,7 @@ export default async function Dashboard() {
 
           <Link
             href="/profile"
-            className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-2xl bg-gray-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-200"
           >
             Update Profile
           </Link>

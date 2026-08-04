@@ -5,21 +5,13 @@ export async function POST() {
   try {
     const jobs = await searchJobs();
 
-    return NextResponse.json({
-      success: true,
-      jobs,
-    });
+    return NextResponse.json(jobs);
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
-      {
-        success: false,
-        message: "Search failed",
-      },
-      {
-        status: 500,
-      }
+      { error: "Search failed" },
+      { status: 500 }
     );
   }
 }

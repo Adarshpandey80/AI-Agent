@@ -18,7 +18,7 @@ const JobSchema = new Schema(
 
     url: {
       type: String,
-      required: true,
+      // required: true,
     },
 
     description: String,
