@@ -11,16 +11,38 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const body = await req.json();
+    const body = await req.json();
 
-  await UserProfile.deleteMany({});
+    if (!body.fullName || !body.email) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Full name and email are required.",
+        },
+        { status: 400 }
+      );
+    }
 
-  const profile = await UserProfile.create(body);
+    await UserProfile.deleteMany({});
 
-  return NextResponse.json({
-    success: true,
-    profile,
-  });
+    const profile = await UserProfile.create(body);
+
+    return NextResponse.json({
+      success: true,
+      profile,
+    });
+  } catch (error: any) {
+    console.error("Profile save failed:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: error?.message || "Failed to save profile.",
+      },
+      { status: 500 }
+    );
+  }
 }
