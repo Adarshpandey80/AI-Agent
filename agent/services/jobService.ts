@@ -1,7 +1,7 @@
 import Job from "@/models/job";
-import connectDB from "@/lib/mongodb";
+import  connectDB  from "@/lib/mongodb";
 
-export async function getDashboardStats() {
+export  async function saveJobs(jobs: any[]) {
   await connectDB();
 
   const jobsFound = await Job.countDocuments();
