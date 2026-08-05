@@ -1,5 +1,5 @@
-import Job from "@/models/Job";
-import connectDB from "@/lib/db";
+import Job from "@/models/job";
+import connectDB from "@/lib/mongodb";
 
 export async function getDashboardStats() {
   await connectDB();
