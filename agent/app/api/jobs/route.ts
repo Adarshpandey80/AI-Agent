@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { saveJobs } from "@/services/jobService";
+import { getJobs } from "@/services/jobService";
 
 export async function GET() {
   try {
-    const stats = await saveJobs([]);
+    const jobs = await getJobs();
 
-    return NextResponse.json(stats);
+    return NextResponse.json(jobs);
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
       {
-        message: "Dashboard error",
+        message: "Failed to fetch jobs",
       },
       {
         status: 500,
