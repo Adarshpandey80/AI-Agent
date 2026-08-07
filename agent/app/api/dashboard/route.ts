@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getDashboardStats } from "@/services/jobService";
+import { saveJobs } from "@/services/jobService";
 
 export async function GET() {
   try {
-    const stats = await getDashboardStats();
+    const stats = await saveJobs([]);
 
     return NextResponse.json(stats);
   } catch (error) {
