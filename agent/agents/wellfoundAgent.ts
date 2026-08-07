@@ -1,4 +1,6 @@
-export async function wellfoundAgent(profile: any) {
+import { Job } from "@/type/job"; 
+
+export async function wellfoundAgent(profile: any): Promise<Job[]> {
   return [
     {
       company: "Google",

@@ -1,4 +1,7 @@
-export async function remoteokAgent(profile: any) {
+import { Job } from "@/type/job"; 
+
+
+export async function remoteokAgent(profile: any): Promise<Job[]> {
   return [
     {
       company: "Google",
