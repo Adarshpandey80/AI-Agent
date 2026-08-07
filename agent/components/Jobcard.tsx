@@ -1,5 +1,8 @@
+import { Job } from "@/type/job"; 
+
+
 type Props = {
-  job: any;
+  job: Job;
 };
 
 export default function JobCard({ job }: Props) {

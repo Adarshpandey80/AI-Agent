@@ -2,6 +2,7 @@ import { searchJobs } from "@/services/searchService";
 import JobCard from "@/components/Jobcard";
 import DashboardStats from "@/components/DashboardStats";
 import Link from "next/link";
+import { Job } from "@/type/job"; 
 
 export default async function Dashboard() {
   const jobs = await searchJobs();
@@ -36,7 +37,7 @@ export default async function Dashboard() {
 
       {jobs.length ? (
         <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {jobs.map((job: any) => (
+          {jobs.map((job: Job) => (
             <JobCard key={job._id ?? `${job.company}-${job.title}`} job={job} />
           ))}
         </section>

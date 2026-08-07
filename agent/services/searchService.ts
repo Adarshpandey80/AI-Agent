@@ -6,6 +6,7 @@ import { remoteokAgent } from "@/agents/remoteokAgent";
 import { getProfile } from "./profileService";
 import { scoreJobs } from "./geminiService";
 import { saveJobs } from "./jobService";
+import { Job } from "@/type/job"; 
 
 export async function searchJobs() {
   const profile = await getProfile();
@@ -22,7 +23,7 @@ export async function searchJobs() {
 
   const remoteJobs = await remoteokAgent(profile);
 
-  const jobs = [
+  const jobs: Job[] = [
     ...linkedinJobs,
     ...indeedJobs,
     ...wellfoundJobs,
