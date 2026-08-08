@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {updateJobStatus, getJobById} from "@/services/jobService";
+import {getJob} from "@/services/jobService";
+
+
 
 export async function POST(req: NextRequest) {
   try {
