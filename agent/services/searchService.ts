@@ -1,12 +1,9 @@
-import { linkedinAgent } from "@/agents/linkedinAgent";
-import { indeedAgent } from "@/agents/indeedAgent";
-import { wellfoundAgent } from "@/agents/wellfoundAgent";
+import { adzunaAgent } from "@/agents/adzunaAgent";
 import { remoteokAgent } from "@/agents/remoteokAgent";
 
 import { getProfile } from "./profileService";
 import { scoreJobs } from "./geminiService";
 import { saveJobs } from "./jobService";
-import { Job } from "@/type/job"; 
 
 export async function searchJobs() {
   const profile = await getProfile();
@@ -15,24 +12,24 @@ export async function searchJobs() {
     return [];
   }
 
-  const linkedinJobs = await linkedinAgent(profile);
-
-  const indeedJobs = await indeedAgent(profile);
-
-  const wellfoundJobs = await wellfoundAgent(profile);
-
+  // Fetch real jobs
+  const adzunaJobs = await adzunaAgent(profile);
   const remoteJobs = await remoteokAgent(profile);
 
-  const jobs: Job[] = [
-    ...linkedinJobs,
-    ...indeedJobs,
-    ...wellfoundJobs,
+  // Combine jobs
+  const jobs = [
+    ...adzunaJobs,
     ...remoteJobs,
   ];
 
-  const filtered = await scoreJobs(profile, jobs);
+  // AI matching
+  const filteredJobs = await scoreJobs(
+    profile,
+    jobs
+  );
 
-  await saveJobs(filtered);
+  // Save to MongoDB
+  await saveJobs(filteredJobs);
 
-  return filtered;
+  return filteredJobs;
 }
