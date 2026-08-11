@@ -12,27 +12,34 @@ const JobSchema = new Schema(
       required: true,
     },
 
-    location: String,
+    location: {
+      type: String,
+      default: "",
+    },
 
-    platform: String,
+    platform: {
+      type: String,
+      default: "",
+    },
 
     url: {
       type: String,
-      // required: true,
+      required: true,
     },
 
-    description: String,
-
-    salary: String,
-
-    matchScore: Number,
-
-    reason: String,
-
-    status: {
+    salary: {
       type: String,
-      default: "Pending",
-      // Pending | Applied | Rejected | Saved
+      default: "",
+    },
+
+    matchScore: {
+      type: Number,
+      default: 0,
+    },
+
+    reason: {
+      type: String,
+      default: "",
     },
 
     applied: {
@@ -40,7 +47,10 @@ const JobSchema = new Schema(
       default: false,
     },
 
-    appliedAt: Date,
+    status: {
+      type: String,
+      default: "New",
+    },
   },
   {
     timestamps: true,

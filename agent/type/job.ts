@@ -1,21 +1,21 @@
-export interface Job {
+export type Job = {
+  _id?: string;
+
   company: string;
   title: string;
-  location: string;
-  platform: string;
+  location?: string;
+  platform?: string;
   url: string;
-
-  description?: string;
   salary?: string;
 
+  score?: number;
   matchScore?: number;
+
   reason?: string;
 
-  status?: "Pending" | "Applied" | "Interview" | "Rejected" | "Saved";
-
   applied?: boolean;
-  appliedAt?: Date;
+  status?: string;
 
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+  createdAt?: string;
+  updatedAt?: string;
+};

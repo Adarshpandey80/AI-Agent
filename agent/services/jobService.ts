@@ -2,49 +2,51 @@ import JobModel from "@/models/job";
 import connectDB from "@/lib/mongodb";
 import { Job } from "@/type/job";
 
-//Save searched jobs
+//Save AI-filtered jobs into MongoDB
  
 export async function saveJobs(jobs: Job[]) {
   await connectDB();
 
-  for (const job of jobs) {
-    await JobModel.findOneAndUpdate(
-      {
-        url: job.url, // URL is unique
-      },
-      {
-        ...job,
-      },
-      {
-        upsert: true,
-        new: true,
-      }
-    );
+  if (!jobs || jobs.length === 0) {
+    return [];
   }
 
-  return jobs;
+  const jobsToSave = jobs.map((job) => ({
+    company: job.company,
+    title: job.title,
+    location: job.location,
+    platform: job.platform,
+    url: job.url,
+    salary: job.salary || "",
+    matchScore: job.score ?? job.matchScore ?? 0,
+    reason: job.reason || "",
+    status: "New",
+    applied: false,
+  }));
+
+  const savedJobs = await JobModel.insertMany(jobsToSave);
+
+  return savedJobs;
 }
 
-
- // Get all jobs
+// Get ALL jobs from MongoDB
 
 export async function getJobs() {
   await connectDB();
 
-  return await JobModel.find().sort({
-    matchScore: -1,
-    createdAt: -1,
-  });
+  const jobs = await JobModel.find()
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return jobs.map((job: any) => ({
+    ...job,
+    _id: job._id.toString(),
+    createdAt: job.createdAt?.toISOString(),
+    updatedAt: job.updatedAt?.toISOString(),
+  }));
 }
 
-// Get job by ID
-export async function getJobById(id: string) {
-  await connectDB();
-
-  return await JobModel.findById(id);
-}
-
-// Get dashboard stats
+// Dashboard statistics
 export async function getDashboardStats() {
   await connectDB();
 
@@ -60,7 +62,7 @@ export async function getDashboardStats() {
   });
 
   const applied = await JobModel.countDocuments({
-    status: "Applied",
+    applied: true,
   });
 
   const interviews = await JobModel.countDocuments({
@@ -73,33 +75,4 @@ export async function getDashboardStats() {
     applied,
     interviews,
   };
-}
-
-
-//Update status
-
-export async function updateJobStatus(
-  id: string,
-  status: string
-) {
-  await connectDB();
-
-  return await JobModel.findByIdAndUpdate(
-    id,
-    {
-      status,
-    },
-    {
-      new: true,
-    }
-  );
-}
-
-
-// Delete job
- 
-export async function deleteJob(id: string) {
-  await connectDB();
-
-  return await JobModel.findByIdAndDelete(id);
 }
