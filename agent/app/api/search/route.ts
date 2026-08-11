@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { searchJobs } from "@/services/searchService";
+import { searchJobsDetailed } from "@/services/searchService";
 
 export async function POST() {
   try {
-    const jobs = await searchJobs();
+    const result = await searchJobsDetailed();
 
     return NextResponse.json({
       success: true,
-      count: jobs.length,
-      jobs,
+      count: result.jobs.length,
+      jobs: result.jobs,
+      warnings: result.warnings,
     });
   } catch (error) {
     console.error(error);

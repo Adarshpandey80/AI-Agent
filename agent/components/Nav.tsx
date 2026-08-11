@@ -1,14 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const storedNotice = sessionStorage.getItem("searchNotice");
+
+    if (storedNotice) {
+      setNotice(storedNotice);
+      sessionStorage.removeItem("searchNotice");
+    }
+  }, []);
 
   async function handleSearch() {
     try {
       setLoading(true);
+      setNotice("");
 
       const res = await fetch("/api/search", {
         method: "POST",
@@ -22,8 +33,18 @@ export default function Navbar() {
       }
 
       console.log(data);
+
+      if (data?.warnings?.length) {
+        sessionStorage.setItem("searchNotice", data.warnings[0]);
+        window.location.reload();
+        return;
+      }
+
       window.location.reload();
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Search failed.";
+
+      setNotice(message);
       console.error(error);
     } finally {
       setLoading(false);
@@ -55,6 +76,12 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+
+      {notice ? (
+        <div className="border-t border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 md:px-6 lg:px-8">
+          {notice}
+        </div>
+      ) : null}
     </header>
   );
 }

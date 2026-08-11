@@ -1,6 +1,11 @@
 // agents/adzunaAgent.ts
 
-export async function adzunaAgent(profile: any) {
+type AdzunaResult = {
+  jobs: any[];
+  error?: string;
+};
+
+export async function adzunaAgent(profile: any): Promise<AdzunaResult> {
   try {
     const roles = profile.roles || [];
 
@@ -51,7 +56,8 @@ export async function adzunaAgent(profile: any) {
 
     const data = await response.json();
 
-    return (data.results || []).map((job: any) => ({
+    return {
+      jobs: (data.results || []).map((job: any) => ({
       company:
         job.company?.display_name || "Unknown",
 
@@ -75,11 +81,18 @@ export async function adzunaAgent(profile: any) {
 
       description:
         job.description || "",
-    }));
+      })),
+    };
 
   } catch (error) {
     console.error("Adzuna Agent Error:", error);
 
-    return [];
+    return {
+      jobs: [],
+      error:
+        error instanceof Error
+          ? error.message
+          : "Adzuna API failed",
+    };
   }
 }
