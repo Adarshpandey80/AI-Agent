@@ -23,7 +23,7 @@ const ApplicationSchema = new Schema(
 
     appliedAt: {
       type: Date,
-      default: Date.now,
+       default: null,
     },
 
     resumeUsed: String,
