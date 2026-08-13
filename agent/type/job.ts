@@ -7,14 +7,22 @@ export type Job = {
   platform?: string;
   url: string;
   salary?: string;
+  description?: string;
 
   score?: number;
   matchScore?: number;
-
   reason?: string;
 
   applied?: boolean;
-  status?: string;
+
+  status?:
+    | "Not Applied"
+    | "Started"
+    | "Applied"
+    | "Interview"
+    | "Rejected"
+    | "Offer"
+    | "Failed";
 
   createdAt?: string;
   updatedAt?: string;
