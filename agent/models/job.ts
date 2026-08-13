@@ -5,26 +5,30 @@ const JobSchema = new Schema(
     company: {
       type: String,
       required: true,
+      trim: true,
     },
 
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
     location: {
       type: String,
-      default: "",
+      default: "Remote",
     },
 
     platform: {
       type: String,
-      default: "",
+      required: true,
     },
 
     url: {
       type: String,
       required: true,
+      unique: true,
+      trim: true,
     },
 
     salary: {
@@ -32,9 +36,16 @@ const JobSchema = new Schema(
       default: "",
     },
 
-    matchScore: {
+    description: {
+      type: String,
+      default: "",
+    },
+
+    score: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 100,
     },
 
     reason: {
@@ -49,7 +60,16 @@ const JobSchema = new Schema(
 
     status: {
       type: String,
-      default: "New",
+      enum: [
+        "Not Applied",
+        "Started",
+        "Applied",
+        "Interview",
+        "Rejected",
+        "Offer",
+        "Failed",
+      ],
+      default: "Not Applied",
     },
   },
   {
