@@ -4,35 +4,72 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
-export async function scoreJobs(
-  profile: any,
-  jobs: any[]
-) {
-  if (!jobs.length) {
+export async function scoreJobs(profile: any, jobs: any[]) {
+  if (!jobs || jobs.length === 0) {
     return [];
   }
 
   const prompt = `
-You are an AI Job Matching Assistant.
+You are an expert job matching system.
 
-Candidate Profile:
+Your task is to score jobs against the candidate profile.
+
+CANDIDATE PROFILE:
 ${JSON.stringify(profile, null, 2)}
 
-Jobs:
+JOBS:
 ${JSON.stringify(jobs, null, 2)}
 
-IMPORTANT RULES:
+SCORING RULES:
 
-1. Only return jobs that exist in the provided Jobs list.
-2. NEVER create or invent a job.
-3. NEVER modify a job URL.
-4. The URL must be copied EXACTLY from the input job.
-5. Remove irrelevant jobs.
-6. Score each remaining job from 0-100.
-7. Explain the score briefly.
-8. Return ONLY valid JSON.
+1. Score every job from 0 to 100.
 
-Format:
+2. Skills are the most important factor.
+   - Exact skill match = strong positive.
+   - Related skills = moderate positive.
+
+3. Role/title match is important.
+   - If candidate wants "Full Stack Developer" and job is
+     "Full Stack Developer", give strong points.
+   - Frontend, Backend, MERN, React, Node.js etc. should be
+     considered related where appropriate.
+
+4. Location:
+   - If the job is Remote and candidate accepts Remote,
+     this should NOT reduce the score.
+   - If the job location matches the candidate's preferred
+     country/location, give positive points.
+   - If location clearly conflicts with the candidate preference,
+     reduce the score moderately.
+
+5. Experience:
+   - Do NOT heavily penalize an entry-level candidate simply because
+     the job does not explicitly specify experience.
+   - If a job explicitly requires many years of experience,
+     reduce the score.
+
+6. Salary:
+   - Consider salary only when candidate salary preferences exist.
+
+7. Education:
+   - Consider education requirements if explicitly provided.
+
+8. A good skill and role match should normally score 60-90.
+
+9. Excellent matches can score 90-100.
+
+10. Do not automatically give low scores just because the job is remote.
+
+11. NEVER invent jobs.
+
+12. NEVER modify the job URL.
+
+13. Copy the URL EXACTLY from the input.
+
+14. Return ONLY valid JSON.
+
+RETURN FORMAT:
+
 [
   {
     "company": "",
@@ -41,6 +78,7 @@ Format:
     "platform": "",
     "url": "",
     "salary": "",
+    "description": "",
     "score": 0,
     "reason": ""
   }
@@ -53,18 +91,30 @@ Format:
       contents: prompt,
     });
 
-    const text = response.text?.trim() || "[]";
+    const text = response.text || "";
 
     const cleaned = text
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    return JSON.parse(cleaned);
+    const scoredJobs = JSON.parse(cleaned);
 
+    return scoredJobs.map((job: any) => ({
+      ...job,
+      score: Math.max(
+        0,
+        Math.min(100, Number(job.score) || 0)
+      ),
+    }));
   } catch (error) {
     console.error("Gemini scoring error:", error);
 
-    return [];
+    // If Gemini fails, don't destroy the jobs.
+    return jobs.map((job) => ({
+      ...job,
+      score: 0,
+      reason: "Unable to calculate match score.",
+    }));
   }
 }
