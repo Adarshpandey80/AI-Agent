@@ -46,6 +46,32 @@ export async function saveJobs(jobs: JobType[]) {
 }
 
 
+export async function getJobById(id: string) {
+  await connectDB();
+
+  return await Job.findById(id).lean();
+}
+
+export async function getJob(id: string) {
+  return await getJobById(id);
+}
+
+export async function updateJobStatus(
+  id: string,
+  status: string
+) {
+  await connectDB();
+
+  return await Job.findByIdAndUpdate(
+    id,
+    {
+      status,
+      applied: status === "Applied" || status === "Interview",
+    },
+    { new: true }
+  ).lean();
+}
+
 export async function getJobs() {
   await connectDB();
 

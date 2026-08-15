@@ -5,6 +5,15 @@ import { getProfile } from "./profileService";
 import { scoreJobs } from "./geminiService";
 import { saveJobs } from "./jobService";
 
+export async function searchJobsDetailed() {
+  const jobs = await searchJobs();
+
+  return {
+    jobs,
+    warnings: [],
+  };
+}
+
 export async function searchJobs() {
   try {
     // 1. Get candidate profile
