@@ -5,85 +5,72 @@ import { Job as JobType } from "@/type/job";
 export async function saveJobs(jobs: JobType[]) {
   await connectDB();
 
-  if (!jobs.length) {
+  if (!Array.isArray(jobs) || jobs.length === 0) {
     return [];
   }
 
-  const operations = jobs
-    .filter((job) => job.url)
-    .map((job) => ({
-      updateOne: {
-        filter: {
-          url: job.url,
-        },
+  const results = [];
 
-        update: {
-          $set: {
-            company: job.company,
-            title: job.title,
-            location: job.location,
-            platform: job.platform,
-            url: job.url,
-            salary: job.salary || "",
-            description: job.description || "",
-            score: Number(job.score ?? 0),
-            reason: job.reason || "",
-          },
+  for (const job of jobs) {
+    if (!job.url) {
+      continue;
+    }
 
-          $setOnInsert: {
-            applied: false,
-            status: "Not Applied",
-          },
-        },
-
-        upsert: true,
+    const savedJob = await Job.findOneAndUpdate(
+      {
+        url: job.url,
       },
-    }));
+      {
+        $set: {
+          externalId: job.externalId,
+          company: job.company,
+          title: job.title,
+          location: job.location,
+          platform: job.platform,
+          url: job.url,
+          salary: job.salary || "",
+          description: job.description || "",
+          score:
+            typeof job.score === "number"
+              ? job.score
+              : 0,
+          reason: job.reason || "",
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
+    );
 
-  await Job.bulkWrite(operations);
+    results.push(savedJob);
+  }
 
-  return jobs;
+  console.log(
+    `Saved/updated ${results.length} jobs`
+  );
+
+  return results;
 }
 
 
-export async function getJobById(id: string) {
-  await connectDB();
-
-  return await Job.findById(id).lean();
-}
-
-export async function getJob(id: string) {
-  return await getJobById(id);
-}
-
-export async function updateJobStatus(
-  id: string,
-  status: string
-) {
-  await connectDB();
-
-  return await Job.findByIdAndUpdate(
-    id,
-    {
-      status,
-      applied: status === "Applied" || status === "Interview",
-    },
-    { new: true }
-  ).lean();
-}
-
+// Get all jobs for dashboard
 export async function getJobs() {
   await connectDB();
 
-  return await Job.find({})
+  const jobs = await Job.find({})
     .sort({
       score: -1,
       createdAt: -1,
     })
     .lean();
+
+  return jobs;
 }
 
 
+// Dashboard statistics
 export async function getDashboardStats() {
   await connectDB();
 
