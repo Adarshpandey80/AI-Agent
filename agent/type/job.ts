@@ -1,6 +1,6 @@
 export type Job = {
   _id?: string;
-
+  externalId: String;
   company: string;
   title: string;
   location?: string;
