@@ -14,58 +14,73 @@ export async function searchJobs() {
 
   console.log("Starting real job search...");
 
-  // Fetch from real sources
-  const [adzunaJobs, remoteJobs] = await Promise.all([
-    adzunaAgent(profile),
-    remoteokAgent(profile),
-  ]);
+  // Fetch real jobs
+  const adzunaJobs = await adzunaAgent(profile);
+  const remoteJobs = await remoteokAgent(profile);
 
-  const jobs = [
-    ...(Array.isArray(adzunaJobs) ? adzunaJobs : []),
-    ...(Array.isArray(remoteJobs) ? remoteJobs : []),
+  const allJobs = [
+    ...(Array.isArray(adzunaJobs)
+      ? adzunaJobs
+      : []),
+
+    ...(Array.isArray(remoteJobs)
+      ? remoteJobs
+      : []),
   ];
 
-  console.log("TOTAL RAW JOBS:", jobs.length);
+  console.log(
+    "Total jobs fetched:",
+    allJobs.length
+  );
 
-  if (jobs.length === 0) {
+  if (allJobs.length === 0) {
     return [];
   }
 
-  // Remove invalid jobs
-  const validJobs = jobs.filter(
-    (job: any) =>
-      job?.url &&
-      job?.title &&
-      job?.company
-  );
-
-  // Remove duplicate URLs
+// Remove duplicate URLs
+  
   const uniqueJobs = Array.from(
     new Map(
-      validJobs.map((job: any) => [
-        job.url,
-        job,
-      ])
+      allJobs
+        .filter(
+          (job) =>
+            job &&
+            job.url &&
+            job.title &&
+            job.company
+        )
+        .map((job) => [
+          job.url,
+          job,
+        ])
     ).values()
   );
 
   console.log(
-    "UNIQUE REAL JOBS:",
+    "Unique jobs:",
     uniqueJobs.length
   );
 
   // AI scoring
+  
   const scoredJobs = await scoreJobs(
     profile,
     uniqueJobs
   );
 
   console.log(
-    "AI SCORED JOBS:",
-    scoredJobs.length
+    "Scored jobs:",
+    scoredJobs.map((job: any) => ({
+      title: job.title,
+      company: job.company,
+      platform: job.platform,
+      score: job.score,
+      url: job.url,
+    }))
   );
 
   // Save/update MongoDB
+  
   await saveJobs(scoredJobs);
 
   return scoredJobs;
