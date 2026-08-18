@@ -1,32 +1,39 @@
-import Job from "@/models/job";
+import JobModel from "@/models/job";
 import connectDB from "@/lib/mongodb";
-import { Job as JobType } from "@/type/job";
+import { Job } from "@/type/job";
 
-export async function saveJobs(jobs: JobType[]) {
+export async function saveJobs(jobs: Job[]) {
   await connectDB();
 
   if (!Array.isArray(jobs) || jobs.length === 0) {
     return [];
   }
 
-  const results = [];
+  // Remove invalid jobs
+  const validJobs = jobs.filter(
+    (job) =>
+      job &&
+      job.url &&
+      job.title &&
+      job.company
+  );
 
-  for (const job of jobs) {
-    if (!job.url) {
-      continue;
-    }
+  // Remove duplicate URLs before MongoDB
+  const uniqueJobs = Array.from(
+    new Map(
+      validJobs.map((job) => [job.url, job])
+    ).values()
+  );
 
-    const savedJob = await Job.findOneAndUpdate(
-      {
-        url: job.url,
-      },
+  for (const job of uniqueJobs) {
+    await JobModel.findOneAndUpdate(
+      { url: job.url },
       {
         $set: {
-          externalId: job.externalId,
           company: job.company,
           title: job.title,
-          location: job.location,
-          platform: job.platform,
+          location: job.location || "Remote",
+          platform: job.platform || "Unknown",
           url: job.url,
           salary: job.salary || "",
           description: job.description || "",
@@ -38,58 +45,69 @@ export async function saveJobs(jobs: JobType[]) {
         },
       },
       {
-        new: true,
         upsert: true,
+        new: true,
         setDefaultsOnInsert: true,
       }
     );
-
-    results.push(savedJob);
   }
 
-  console.log(
-    `Saved/updated ${results.length} jobs`
-  );
-
-  return results;
+  return uniqueJobs;
 }
 
 
-// Get all jobs for dashboard
-export async function getJobs() {
+/**
+ * Get jobs already stored in MongoDB
+ */
+export async function getJobs(): Promise<Job[]> {
   await connectDB();
 
-  const jobs = await Job.find({})
+  const jobs = await JobModel.find({})
     .sort({
       score: -1,
       createdAt: -1,
     })
     .lean();
 
-  return jobs;
+  // Extra protection against duplicate URLs
+  const uniqueJobs = Array.from(
+    new Map(
+      jobs.map((job: any) => [
+        job.url,
+        {
+          ...job,
+          _id: job._id.toString(),
+        },
+      ])
+    ).values()
+  );
+
+  return uniqueJobs as Job[];
 }
 
 
-// Dashboard statistics
+/**
+ * Dashboard statistics
+ */
 export async function getDashboardStats() {
   await connectDB();
 
-  const jobsFound = await Job.countDocuments();
+  const jobsFound = await JobModel.countDocuments();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const newToday = await Job.countDocuments({
+  const newToday = await JobModel.countDocuments({
     createdAt: {
       $gte: today,
     },
   });
 
-  const applied = await Job.countDocuments({
+  const applied = await JobModel.countDocuments({
     applied: true,
   });
 
-  const interviews = await Job.countDocuments({
+  const interviews = await JobModel.countDocuments({
     status: "Interview",
   });
 

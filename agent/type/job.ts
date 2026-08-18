@@ -1,10 +1,10 @@
 export type Job = {
   _id?: string;
-  externalId: String;
+
   company: string;
   title: string;
   location?: string;
-  platform?: string;
+  platform: string;
   url: string;
   salary?: string;
   description?: string;
@@ -16,7 +16,6 @@ export type Job = {
   applied?: boolean;
 
   status?:
-    | "Not Applied"
     | "Started"
     | "Applied"
     | "Interview"
@@ -24,6 +23,6 @@ export type Job = {
     | "Offer"
     | "Failed";
 
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 };

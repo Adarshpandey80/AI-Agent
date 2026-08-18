@@ -37,9 +37,11 @@ export default async function Dashboard() {
 
           <Link
             href="/profile"
-            className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            className="inline-flex items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold  transition hover:bg-slate-200"
           >
-            Update Profile
+            <span className="text-white"> 
+            Update Profile 
+            </span>
           </Link>
 
         </div>

@@ -2,19 +2,16 @@ import { Schema, model, models } from "mongoose";
 
 const JobSchema = new Schema(
   {
-    externalId: {
-      type: String,
-      default: "",
-    },
-
     company: {
       type: String,
       required: true,
+      trim: true,
     },
 
     title: {
       type: String,
       required: true,
+      trim: true,
     },
 
     location: {
@@ -30,7 +27,7 @@ const JobSchema = new Schema(
     url: {
       type: String,
       required: true,
-      unique: true,
+      trim: true,
     },
 
     salary: {
@@ -46,6 +43,8 @@ const JobSchema = new Schema(
     score: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 100,
     },
 
     reason: {
@@ -61,13 +60,14 @@ const JobSchema = new Schema(
     status: {
       type: String,
       enum: [
-        "Saved",
+        "Started",
         "Applied",
         "Interview",
         "Rejected",
         "Offer",
+        "Failed",
       ],
-      default: "Saved",
+      default: "Started",
     },
   },
   {
@@ -75,5 +75,7 @@ const JobSchema = new Schema(
   }
 );
 
-export default models.Job ||
-  model("Job", JobSchema);
+// One URL = one job
+JobSchema.index({ url: 1 }, { unique: true });
+
+export default models.Job || model("Job", JobSchema);
