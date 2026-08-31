@@ -9,20 +9,12 @@ export async function saveJobs(jobs: Job[]) {
     return [];
   }
 
-  // Remove invalid jobs
   const validJobs = jobs.filter(
-    (job) =>
-      job &&
-      job.url &&
-      job.title &&
-      job.company
+    (job) => job && job.url && job.title && job.company
   );
 
-  // Remove duplicate URLs before MongoDB
   const uniqueJobs = Array.from(
-    new Map(
-      validJobs.map((job) => [job.url, job])
-    ).values()
+    new Map(validJobs.map((job) => [job.url, job])).values()
   );
 
   for (const job of uniqueJobs) {
@@ -37,10 +29,7 @@ export async function saveJobs(jobs: Job[]) {
           url: job.url,
           salary: job.salary || "",
           description: job.description || "",
-          score:
-            typeof job.score === "number"
-              ? job.score
-              : 0,
+          score: typeof job.score === "number" ? job.score : 0,
           reason: job.reason || "",
         },
       },
@@ -55,21 +44,18 @@ export async function saveJobs(jobs: Job[]) {
   return uniqueJobs;
 }
 
-
-/**
- * Get jobs already stored in MongoDB
- */
 export async function getJobs(): Promise<Job[]> {
   await connectDB();
 
-  const jobs = await JobModel.find({})
+  const jobs = await JobModel.find({
+    score: { $gte: 90 },
+  })
     .sort({
       score: -1,
       createdAt: -1,
     })
     .lean();
 
-  // Extra protection against duplicate URLs
   const uniqueJobs = Array.from(
     new Map(
       jobs.map((job: any) => [
@@ -85,29 +71,59 @@ export async function getJobs(): Promise<Job[]> {
   return uniqueJobs as Job[];
 }
 
+export async function getJobById(jobId: string): Promise<Job | null> {
+  await connectDB();
 
-/**
- * Dashboard statistics
- */
+  const job = await JobModel.findById(jobId).lean();
+
+  if (!job) {
+    return null;
+  }
+
+  return {
+    ...job,
+    _id: job._id?.toString?.() ?? job._id,
+  } as Job;
+}
+
+export async function getJob(jobId: string): Promise<Job | null> {
+  return getJobById(jobId);
+}
+
+export async function updateJobStatus(jobId: string, status: string) {
+  await connectDB();
+
+  return JobModel.findByIdAndUpdate(
+    jobId,
+    { $set: { status } },
+    { new: true }
+  ).lean();
+}
+
 export async function getDashboardStats() {
   await connectDB();
 
-  const jobsFound = await JobModel.countDocuments();
+  const baseMatch = { score: { $gte: 90 } };
+
+  const jobsFound = await JobModel.countDocuments(baseMatch);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const newToday = await JobModel.countDocuments({
+    ...baseMatch,
     createdAt: {
       $gte: today,
     },
   });
 
   const applied = await JobModel.countDocuments({
+    ...baseMatch,
     applied: true,
   });
 
   const interviews = await JobModel.countDocuments({
+    ...baseMatch,
     status: "Interview",
   });
 

@@ -4,10 +4,60 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
-export async function scoreJobs(
-  profile: any,
-  jobs: any[]
-) {
+function getLocalMatchScore(profile: any, job: any): number {
+  const text = [
+    job.title || "",
+    job.company || "",
+    job.description || "",
+    job.location || "",
+    job.platform || "",
+    job.salary || "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const roles = (profile?.roles || [])
+    .map((role: string) => String(role).toLowerCase().trim())
+    .filter(Boolean);
+
+  const skills = (profile?.skills || [])
+    .map((skill: string) => String(skill).toLowerCase().trim())
+    .filter(Boolean);
+
+  const countries = (profile?.countries || [])
+    .map((country: string) => String(country).toLowerCase().trim())
+    .filter(Boolean);
+
+  let score = 24;
+
+  if (roles.length > 0) {
+    const roleMatches = roles.filter((role: string) => text.includes(role));
+    score += Math.min(44, roleMatches.length * 18);
+  }
+
+  if (skills.length > 0) {
+    const skillMatches = skills.filter((skill: string) => text.includes(skill));
+    score += Math.min(20, skillMatches.length * 5);
+  }
+
+  if (countries.length > 0) {
+    const countryMatches = countries.filter((country: string) => text.includes(country));
+    score += Math.min(12, countryMatches.length * 6);
+  }
+
+  if (/(remote|hybrid|distributed|online)/i.test(job.location || "") || /remote|hybrid/i.test(text)) {
+    score += 10;
+  }
+
+  if (job.salary) score += 5;
+  if (job.description) score += 5;
+
+  if (score > 100) score = 100;
+
+  return Math.max(0, Math.round(score));
+}
+
+export async function scoreJobs(profile: any, jobs: any[]) {
   if (!Array.isArray(jobs) || jobs.length === 0) {
     return [];
   }
@@ -81,11 +131,14 @@ RETURN EXACTLY THIS FORMAT:
     const text = response.text?.trim();
 
     if (!text) {
-      return jobs.map((job) => ({
-        ...job,
-        score: 0,
-        reason: "Unable to calculate AI match score.",
-      }));
+      return jobs.map((job) => {
+        const localScore = getLocalMatchScore(profile, job);
+        return {
+          ...job,
+          score: localScore,
+          reason: localScore >= 80 ? "Strong profile alignment." : "Profile-based match assessment.",
+        };
+      });
     }
 
     const cleaned = text
@@ -100,35 +153,33 @@ RETURN EXACTLY THIS FORMAT:
       throw new Error("Gemini did not return an array.");
     }
 
-
-    // Match Gemini results back to ORIGINAL jobs using URL.
-    // This prevents Gemini from inventing/replacing jobs.
     const scoredMap = new Map();
 
     for (const result of parsed) {
       if (!result?.url) continue;
-
       scoredMap.set(result.url, result);
     }
 
-    // Return EVERY original job. If Gemini missed a job, give it score 0.
-     
     return jobs.map((originalJob) => {
       const aiJob = scoredMap.get(originalJob.url);
+      const localScore = getLocalMatchScore(profile, originalJob);
 
       if (!aiJob) {
         return {
           ...originalJob,
-          score: 0,
-          reason:
-            "AI did not return a score for this job.",
+          score: localScore,
+          reason: localScore >= 80 ? "Strong profile alignment." : "Profile-based match assessment.",
         };
       }
 
+      const aiScore = typeof aiJob.score === "number" ? aiJob.score : localScore;
+      const finalScore = Math.max(
+        0,
+        Math.min(100, Math.round((aiScore * 0.55) + (localScore * 0.45)))
+      );
+
       return {
         ...originalJob,
-
-        // Original data is always trusted
         company: originalJob.company,
         title: originalJob.title,
         location: originalJob.location,
@@ -136,34 +187,25 @@ RETURN EXACTLY THIS FORMAT:
         url: originalJob.url,
         salary: originalJob.salary,
         description: originalJob.description,
-
-        score:
-          typeof aiJob.score === "number"
-            ? Math.max(
-                0,
-                Math.min(100, aiJob.score)
-              )
-            : 0,
-
+        score: finalScore,
         reason:
-          typeof aiJob.reason === "string"
+          typeof aiJob.reason === "string" && aiJob.reason.trim()
             ? aiJob.reason
-            : "No reason provided.",
+            : finalScore >= 80
+              ? "Strong match to your profile."
+              : "Relevant opportunity with a good profile fit.",
       };
     });
   } catch (error) {
-    console.error(
-      "Gemini scoring error:",
-      error
-    );
+    console.error("Gemini scoring error:", error);
 
-    // Never lose real jobs because AI failed.
-     
-    return jobs.map((job) => ({
-      ...job,
-      score: 0,
-      reason:
-        "AI scoring failed. Job was still fetched successfully.",
-    }));
+    return jobs.map((job) => {
+      const localScore = getLocalMatchScore(profile, job);
+      return {
+        ...job,
+        score: localScore,
+        reason: localScore >= 80 ? "Strong profile alignment." : "Profile-based match assessment.",
+      };
+    });
   }
 }

@@ -4,8 +4,9 @@ import { remoteokAgent } from "@/agents/remoteokAgent";
 import { getProfile } from "./profileService";
 import { scoreJobs } from "./geminiService";
 import { saveJobs } from "./jobService";
+import type { Job } from "@/type/job";
 
-export async function searchJobs() {
+export async function searchJobs(): Promise<Job[]> {
   const profile = await getProfile();
 
   if (!profile) {
@@ -14,63 +15,40 @@ export async function searchJobs() {
 
   console.log("Starting real job search...");
 
-  // Fetch real jobs
   const adzunaJobs = await adzunaAgent(profile);
   const remoteJobs = await remoteokAgent(profile);
 
-  const allJobs = [
-    ...(Array.isArray(adzunaJobs)
-      ? adzunaJobs
-      : []),
-
-    ...(Array.isArray(remoteJobs)
-      ? remoteJobs
-      : []),
+  const sourceJobs = [
+    ...(Array.isArray(adzunaJobs) ? adzunaJobs : Array.isArray((adzunaJobs as any)?.jobs) ? (adzunaJobs as any).jobs : []),
+    ...(Array.isArray(remoteJobs) ? remoteJobs : []),
   ];
 
-  console.log(
-    "Total jobs fetched:",
-    allJobs.length
-  );
+  const allJobs = Array.from(
+    new Map(
+      sourceJobs
+        .filter((job) => job && job.url && job.title && job.company)
+        .map((job) => [job.url, job])
+    ).values()
+  ) as Job[];
+
+  console.log("Total jobs fetched:", allJobs.length);
 
   if (allJobs.length === 0) {
     return [];
   }
 
-// Remove duplicate URLs
-  
-  const uniqueJobs = Array.from(
-    new Map(
-      allJobs
-        .filter(
-          (job) =>
-            job &&
-            job.url &&
-            job.title &&
-            job.company
-        )
-        .map((job) => [
-          job.url,
-          job,
-        ])
-    ).values()
-  );
+  const uniqueJobs = allJobs;
 
-  console.log(
-    "Unique jobs:",
-    uniqueJobs.length
-  );
+  console.log("Unique jobs:", uniqueJobs.length);
 
-  // AI scoring
-  
-  const scoredJobs = await scoreJobs(
-    profile,
-    uniqueJobs
+  const scoredJobs = await scoreJobs(profile, uniqueJobs);
+  const qualifiedJobs = scoredJobs.filter(
+    (job) => Number(job.score ?? 0) >= 90
   );
 
   console.log(
     "Scored jobs:",
-    scoredJobs.map((job: any) => ({
+    qualifiedJobs.map((job: Job) => ({
       title: job.title,
       company: job.company,
       platform: job.platform,
@@ -79,9 +57,26 @@ export async function searchJobs() {
     }))
   );
 
-  // Save/update MongoDB
-  
-  await saveJobs(scoredJobs);
+  await saveJobs(qualifiedJobs);
 
-  return scoredJobs;
+  return qualifiedJobs;
+}
+
+export async function searchJobsDetailed(): Promise<{
+  jobs: Job[];
+  warnings: string[];
+}> {
+  const jobs = await searchJobs();
+
+  if (!jobs.length) {
+    return {
+      jobs: [],
+      warnings: ["No jobs matched your current profile. Update your profile and try again."],
+    };
+  }
+
+  return {
+    jobs,
+    warnings: [],
+  };
 }

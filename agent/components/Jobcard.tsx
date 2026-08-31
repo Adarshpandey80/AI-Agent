@@ -6,6 +6,14 @@ type Props = {
 };
 
 export default function JobCard({ job }: Props) {
+  const score = typeof job.score === "number" ? job.score : typeof job.matchScore === "number" ? job.matchScore : 0;
+  const scoreTone =
+    score >= 90
+      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+      : score >= 75
+        ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+        : "bg-rose-50 text-rose-700 ring-1 ring-rose-200";
+
   return (
     <article className="group rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
       <div className="flex items-start justify-between gap-4">
@@ -19,9 +27,9 @@ export default function JobCard({ job }: Props) {
           <p className="mt-1 text-sm text-slate-600">{job.company}</p>
         </div>
 
-        <div className="rounded-2xl bg-slate-950 px-3 py-2 text-right text-white">
-          <p className="text-[10px] uppercase tracking-[0.28em] text-slate-400">Score</p>
-          <p className="text-lg font-semibold">{job.score ?? job.matchScore ?? "--"}</p>
+        <div className={`rounded-2xl px-3 py-2 text-right ${scoreTone}`}>
+          <p className="text-[10px] uppercase tracking-[0.28em] opacity-80">Score</p>
+          <p className="text-lg font-semibold">{score}</p>
         </div>
       </div>
 
